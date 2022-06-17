@@ -1,12 +1,12 @@
-# wiresharkListener
+# WiresharkListener
 Questo codice è implementato su Ubuntu 21.10 con lua versione 5.2.4
 
-# prerequisiti
+# Prerequisiti
 lua sandbox (https://github.com/mozilla-services/lua_sandbox)
 lua sandbox extensions ( https://mozilla-services.github.io/lua_sandbox_extensions/ )
 CMake (3.6+)
 
-# istruzioni
+# Istruzioni
 cd /usr/lib/
 mkdir lua
 cd lua 
