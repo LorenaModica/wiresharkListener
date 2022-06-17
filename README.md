@@ -1,5 +1,5 @@
 # WiresharkListener
-Questo codice è implementato su Ubuntu 21.10 con Lua versione 5.2.4
+Questo codice è implementato su Ubuntu 21.10 con Lua versione 5.2.4 testato su Wireshark versione 3.4.7 
 
 # Prerequisiti
 
