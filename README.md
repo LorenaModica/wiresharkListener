@@ -7,6 +7,7 @@ lua sandbox extensions ( https://mozilla-services.github.io/lua_sandbox_extensio
 CMake (3.6+)
 
 # Istruzioni
+```
 cd /usr/lib/
 mkdir lua
 cd lua 
@@ -35,3 +36,4 @@ ctest
 make packages
 make install
 
+```
