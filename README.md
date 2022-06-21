@@ -15,5 +15,5 @@ Questo codice è implementato su Ubuntu 21.10 con Lua versione 5.2.4 testato su 
   git clone https://github.com/LorenaModica/wiresharkListener.git
   
   ```
-  * Avviare Wireshark come root
+* Avviare Wireshark come root
 
