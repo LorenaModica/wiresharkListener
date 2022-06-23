@@ -1,27 +1,47 @@
 local hyperloglog = require 'hyperloglog'
+local utils = require 'utils'
 
 -- Define the menu entry's callback
 local function host_info ()
 	
 	local function host_func(ipv4_address)
+    	
     	local window = TextWindow.new("Host Info")
-        local message = string.format("Host: %s", ipv4_address)
-        window:set(message);
+   
+    	
+    	if check_ipv4(ipv4_address) then
+        
+        	local message = string.format("Info about host: %s",ipv4_address);
+        	window:set(message);
+        	-- this is our tap
+			local tap = Listener.new();
+        
+        	--hll_init()
+        
+        	-- this function will be called once every few seconds to update our window
+			--[[function tap.draw(t)
+			tw:clear()
+			for ip,num in pairs(ips) do
+				tw:append(ip .. "\t" .. num .. "\n");
+			end
+			end]]--
+		
+			local function remove()
+				-- this way we remove the listener that otherwise will remain running indefinitely
+				tap:remove();
+			end
+
+			-- we tell the window to call the remove() function when closed
+			--window:set_atclose(remove)
+        else
+       		local message = string.format("ERROR: %s : please insert a valid ipv4 address!",ipv4_address);
+        	window:set(message);
+        end
+        
     end
 
     new_dialog("Host Info",host_func,"Host address")
-    
-	-- this is our tap
-	local tap = Listener.new();
-
-	local function remove()
-		-- this way we remove the listener that otherwise will remain running indefinitely
-		tap:remove();
-	end
-
-	-- we tell the window to call the remove() function when closed
-	--window:set_atclose(remove)
-	
+    	
 end
 
 -- Create the menu entry
