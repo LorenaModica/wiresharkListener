@@ -1,42 +1,49 @@
-local hll = {}
+local sha2 = require 'sha2'
 
-local function _hll_hash (hll) 
-  return MurmurHash3_x86_32(hll.registers, hll.size , 0)
+--
+local function _hll_hash (registers) 
+  return sha2(registers)
 end
 
 --Count the number of leading zero's
-local function _hll_rank (hash , bits) 
-      
-	for i = 1, 32 - bits do
-  		if hash and 1 then 
-  			break 
-  		end
-   		--hash >>= 1;
-   		--right shift (n >> bits)   
-  		bit.brshift(1, hash) 
+--for example 007 has 2 leading zero
+local function _hll_rank (hash,bits) 
+ 
+  local rank = 0
+
+  for i = 1, (32 - bits),1  do
+  	
+    if hash and 1 then
+      rank = i
+      break
 	end
 	
-	return i
+    bit.rshift(1, hash)
+  	
+  end
+  
+  return rank
 
 end
 
 function hll_init (hll,bits) 
   
 	if bits < 4 or bits > 20 then 
-		errno = ERANGE return -1
+		errno = ERANGE return false
   	end
 
 	hll.bits = bits -- Number of bits of buckets number 
   	-- left shift (n << bits)
-  	hll.size = bit.blshift(1, bits) -- Number of buckets 2^bits 
-  	hll.registers = dmalloc(hll.size, 1) -- Create the bucket register counters 
-
-  	print("%s bytes\n", hll.size)
-  
-  	return 0
+  	hll.size =bit.lshift(bits, 1) -- Number of buckets 2^bits 
+  	hll.registers = {} -- Create the bucket register counters 
+ 
+  	--print("bytes", hll.size)
+  	
+  	return true
 
 end
 
+----rivedere
 function hll_destroy (hll) 
   
 	if hll.registers then 
@@ -46,6 +53,7 @@ function hll_destroy (hll)
 
 end
 
+----rivedere
 function hll_reset (hll) 
   
 	if hll.registers then
@@ -55,26 +63,35 @@ function hll_reset (hll)
 end
 
 local function _hll_add_hash (hll,hash) 
-	
+		
 	if hll.registers then
-		bit.brshift(32 - hll.bits, hash) -- Use the first 'hll->bits' bits as bucket index
-    	rank = _hll_rank(hash, hll.bits) --Count the number of leading 0
-    
+			
+		local bin_hash=toBinString(hash)
+		
+		--u_int32_t index = hash >> (32 - hll->bits); 
+		index = bit.rshift(32 - hll.bits,bin_hash) -- Use the first 'hll->bits' bits as bucket index
+    	rank = _hll_rank(bin_hash, hll.bits) --Count the number of leading 0
+  		
+  		if not hll.registers[index] then
+  			hll.registers[index] = 0
+    	end
+    	
     	if rank > hll.registers[index] then
-      		hll.registers[index] = rank --Store the largest number of lesding zeros for the bucket  
-      	end  	  
+    	  	hll.registers[index] = rank --Store the largest number of lesding zeros for the bucket  
+      	end  
+      		  
 	end
 	
 end
 
-function hll_add (hll, buf,size) 
-  
-	hash = MurmurHash3_x86_32(buf,size, 0x5f61767a)
+function hll_add (hll,item) 
+
+	hash = sha2.sha256(item)
 	_hll_add_hash(hll, hash)
   
 end
 
-
+----rivedere
 function hll_count (hll) 
 		
 	if hll.registers then

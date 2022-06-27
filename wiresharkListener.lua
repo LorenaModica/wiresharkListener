@@ -8,31 +8,63 @@ local function host_info ()
     	
     	local window = TextWindow.new("Host Info")
    
-    	
     	if check_ipv4(ipv4_address) then
         
-        	local message = string.format("Info about host: %s",ipv4_address);
-        	window:set(message);
-        	-- this is our tap
+        	local hll_hosts = {}
+        	local hll_packets = {}
+        	local hll_to_host = {}
+        
+        	local init_one = hll_init (hll_hosts , 10)
+			local init_two = hll_init (hll_packets , 10)
+			local init_three = hll_init (hll_to_host , 10)
+		     
+		    -- this is our tap
 			local tap = Listener.new();
-        
-        	--hll_init()
-        
-        	-- this function will be called once every few seconds to update our window
-			--[[function tap.draw(t)
-			tw:clear()
-			for ip,num in pairs(ips) do
-				tw:append(ip .. "\t" .. num .. "\n");
-			end
-			end]]--
-		
+		    
 			local function remove()
 				-- this way we remove the listener that otherwise will remain running indefinitely
 				tap:remove();
 			end
-
+				
 			-- we tell the window to call the remove() function when closed
-			--window:set_atclose(remove)
+			window:set_atclose(remove)
+				
+			if (init_one and init_two and init_three) then	
+				-- this function will be called once for each packet
+				function tap.packet(pinfo,tvb)
+					
+					local src = tostring(pinfo.src)
+					
+					if src==ipv4_address then  
+						--hll conta numero host contattati diversi da questo host
+						local dst =tostring(pinfo.dst)	
+						hll_add(hll_hosts,dst)
+						--hll conta per ogni host contattato quanti pacchetti scambiati
+						
+						--hll conta quante volte ipv4 address compare come destinatario
+					end
+				end
+					
+				-- this function will be called once every few seconds to update our window
+				function tap.draw(t)
+					local message = string.format("Info about host: %s",ipv4_address);
+			   		window:set(message);
+					--window:clear()
+					--for ip,num in pairs(ips) do
+						--tw:append(ip .. "\t" .. num .. "\n");
+					--end
+				end
+				
+				-- this function will be called whenever a reset is needed
+				-- e.g. when reloading the capture file
+				function tap.reset()
+					window:clear()
+					--ips = {}
+				end
+					
+				-- Ensure that all existing packets are processed.
+				retap_packets()	
+			end
         else
        		local message = string.format("ERROR: %s : please insert a valid ipv4 address!",ipv4_address);
         	window:set(message);
