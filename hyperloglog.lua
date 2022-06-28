@@ -1,29 +1,27 @@
 local sha2 = require 'sha2'
 
---
 local function _hll_hash (registers) 
   return sha2(registers)
 end
 
 --Count the number of leading zero's
---for example 007 has 2 leading zero
-local function _hll_rank (hash,bits) 
- 
-  local rank = 0
-
-  for i = 1, (32 - bits),1  do
-  	
-    if hash and 1 then
-      rank = i
-      break
-	end
+--Leading zeroes is the number of 0s before the first 1 
+--in the binary representation of the hash
+local function _hll_rank (dec_hash,bits) 
+ 	
+ 	rank=0
 	
-    bit.rshift(1, hash)
-  	
-  end
+	for i=1,32-bits do
+   		local c = bin_hash:sub(i,i)	 		
+   		local bin_hash=toBinString(dec_hash)
+   		
+   		if c=="1" then break end
   
-  return rank
+   		rank=i
+   		dec_hash=bit32.rshift(dec_hash,1)
+	end
 
+	return rank
 end
 
 function hll_init (hll,bits) 
@@ -34,7 +32,7 @@ function hll_init (hll,bits)
 
 	hll.bits = bits -- Number of bits of buckets number 
   	-- left shift (n << bits)
-  	hll.size =bit.lshift(bits, 1) -- Number of buckets 2^bits 
+  	hll.size=bit32.lshift(bits, 1)-- Number of buckets 2^bits
   	hll.registers = {} -- Create the bucket register counters 
  
   	--print("bytes", hll.size)
@@ -66,11 +64,15 @@ local function _hll_add_hash (hll,hash)
 		
 	if hll.registers then
 			
-		local bin_hash=toBinString(hash)
-		
-		--u_int32_t index = hash >> (32 - hll->bits); 
-		index = bit.rshift(32 - hll.bits,bin_hash) -- Use the first 'hll->bits' bits as bucket index
-    	rank = _hll_rank(bin_hash, hll.bits) --Count the number of leading 0
+		bin_hash=toBinString(hash)
+		dec_hash=toDecBin(bin_hash)
+				
+		-- Use the first 'hll->bits' bits as bucket index
+		-- u_int32_t index = hash >> (32 - hll->bits);
+		local index = bit32.rshift(dec_hash, 32-hll.bits)
+    	--rank = _hll_rank(dec_hash, hll.bits) --Count the number of leading 0
+  		local rank = _hll_rank(dec_hash,hll.bits)
+  		
   		
   		if not hll.registers[index] then
   			hll.registers[index] = 0
@@ -85,10 +87,8 @@ local function _hll_add_hash (hll,hash)
 end
 
 function hll_add (hll,item) 
-
 	hash = sha2.sha256(item)
 	_hll_add_hash(hll, hash)
-  
 end
 
 ----rivedere
