@@ -1,15 +1,16 @@
 local sha2 = require 'sha2'
 
 local function _hll_hash (registers) 
-  return sha2(registers)
+	return sha2(registers)
 end
 
---Count the number of leading zero's
---Leading zeroes is the number of 0s before the first 1 
---in the binary representation of the hash
+--[[Count the number of leading zero's
+A leading zero is any 0 digit that comes before 
+the first nonzero digit in a number string in positional notation.
+For example, James Bond's famous identifier, 007, has two leading zeros]]--
 local function _hll_rank (dec_hash,bits) 
  	
- 	rank=0
+ 	local rank=0
 	
 	for i=1,32-bits do
    		local c = bin_hash:sub(i,i)	 		
@@ -24,6 +25,17 @@ local function _hll_rank (dec_hash,bits)
 	return rank
 end
 
+local function hll_reset (hll) 
+  
+	if hll.registers then 
+		for i = 0 , hll.size do
+			hll.registers[i] = 0
+		end
+	end
+	
+end
+
+
 function hll_init (hll,bits) 
   
 	if bits < 4 or bits > 20 then 
@@ -32,32 +44,22 @@ function hll_init (hll,bits)
 
 	hll.bits = bits -- Number of bits of buckets number 
   	-- left shift (n << bits)
-  	hll.size=bit32.lshift(bits, 1)-- Number of buckets 2^bits
+  	hll.size=bit32.lshift(1,bits) --Number of buckets 2^bits
   	hll.registers = {} -- Create the bucket register counters 
  
+	hll_reset (hll)
   	--print("bytes", hll.size)
-  	
+
   	return true
 
 end
 
-----rivedere
 function hll_destroy (hll) 
   
 	if hll.registers then 
-  		dmalloc(hll.registers)
-    	hll.registers = nil	 
+    	hll=nil
   	end
 
-end
-
-----rivedere
-function hll_reset (hll) 
-  
-	if hll.registers then
-  		memset(hll.registers, 0, hll.size);
-	end
-	
 end
 
 local function _hll_add_hash (hll,hash) 
@@ -70,14 +72,8 @@ local function _hll_add_hash (hll,hash)
 		-- Use the first 'hll->bits' bits as bucket index
 		-- u_int32_t index = hash >> (32 - hll->bits);
 		local index = bit32.rshift(dec_hash, 32-hll.bits)
-    	--rank = _hll_rank(dec_hash, hll.bits) --Count the number of leading 0
-  		local rank = _hll_rank(dec_hash,hll.bits)
+  		local rank = _hll_rank(dec_hash,hll.bits) --Count the number of leading 0
   		
-  		
-  		if not hll.registers[index] then
-  			hll.registers[index] = 0
-    	end
-    	
     	if rank > hll.registers[index] then
     	  	hll.registers[index] = rank --Store the largest number of lesding zeros for the bucket  
       	end  
@@ -91,23 +87,24 @@ function hll_add (hll,item)
 	_hll_add_hash(hll, hash)
 end
 
-----rivedere
 function hll_count (hll) 
 		
 	if hll.registers then
-    		
+    	
+		local sum = 0
+		local alpha_mm = 0
+
     	action = {
     		[4] = function (x) alpha_mm = 0.673 end,
     		[5] = function (x) alpha_mm = 0.697 end,
     		[6] = function (x) alpha_mm = 0.709 end,
     		["nop"] = function (x) alpha_mm = 0.7213 / (1.0 + 1.079 / hll.size) end,
     	}	
+		
 		alpha_mm =alpha_mm * (hll.size * hll.size)
-
-    	local sum = 0;
     
     	for i = 0 , hll.size do
-    		sum = sum + (1.0 / ( bit.blshift(1, hll.registers[i]) ))    
+    		sum = sum + (1.0 / bit32.lshift(1,hll.registers[i]))    
 		end
 	
     	estimate = alpha_mm / sum;
@@ -116,17 +113,20 @@ function hll_count (hll)
     		zeros = 0;
 
     		for i = 0 , hll.size do
-				zeros = zeros + (hll.registers[i] == 0)
+				if hll.registers[i] == 0 then
+					zeros = zeros + 1
+				end			
 			end
 
-    		if zeros then
-				estimate = hll.size * log(hll.size / zeros)
+    		if zeros~=0 then
+				estimate = hll.size * math.log(hll.size / zeros)
 			end
 
     	elseif (estimate > ((1.0 / 30.0) * 4294967296.0)) then 
-      		estimate = -4294967296.0 * log(1.0 - (estimate / 4294967296.0))
+      		estimate = -4294967296.0 * math.log(1.0 - (estimate / 4294967296.0))
     	end
 
+		estimate=math.ceil(estimate)
     	return estimate
  
 	else
