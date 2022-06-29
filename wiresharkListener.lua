@@ -124,7 +124,6 @@ end
 register_menu("Host info/Host stats",host_info,MENU_TOOLS_UNSORTED)
 
 -- Notify the user that the menu was created
--- code from https://www.wireshark.org/docs/wsdg_html_chunked/wslua_menu_example.html
 if gui_enabled() then
    local splash = TextWindow.new("Hello!");
    splash:set("Wireshark has been enhanced with a new feature.\n")
