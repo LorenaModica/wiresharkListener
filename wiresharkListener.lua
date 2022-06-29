@@ -15,8 +15,8 @@ local function host_info ()
 
 			local host_packets= {}
 
-       local hll_hosts = {}
-       local hll_packets = {}
+       		local hll_hosts = {}
+       		local hll_packets = {}
         	local hll_to_host = {}
         
         	local init_one = hll_init (hll_hosts , 19)
