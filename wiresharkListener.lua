@@ -10,11 +10,11 @@ local function host_info ()
    
     	if check_ipv4(ipv4_address) then
         
-			local estimate_one = 0
-			local estimate_two = 0
+		local estimate_one = 0
+		local estimate_two = 0
 			
-			--contiene coppie host,stima
-			local host_packets= {}
+		--contiene coppie host,stima
+		local host_packets= {}
 
        		local hll_hosts = {}
         	local hll_to_host = {}
