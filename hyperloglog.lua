@@ -94,12 +94,15 @@ function hll_count (hll)
 		local sum = 0
 		local alpha_mm = 0
 
-    	action = {
-    		[4] = function (x) alpha_mm = 0.673 end,
-    		[5] = function (x) alpha_mm = 0.697 end,
-    		[6] = function (x) alpha_mm = 0.709 end,
-    		["nop"] = function (x) alpha_mm = 0.7213 / (1.0 + 1.079 / hll.size) end,
-    	}	
+ 		if hll.bits==4 then
+			alpha_mm = 0.673
+		elseif hll.bits==5 then
+			alpha_mm = 0.697
+		elseif hll.bits==6 then
+			alpha_mm = 0.709
+		else
+			alpha_mm = 0.7213 / (1.0 + 1.079 /hll.size)
+		end
 		
 		alpha_mm =alpha_mm * (hll.size * hll.size)
     
@@ -127,6 +130,7 @@ function hll_count (hll)
     	end
 
 		estimate=math.ceil(estimate)
+
     	return estimate
  
 	else

@@ -12,19 +12,19 @@ local function host_info ()
         
 			local estimate_one = 0
 			local estimate_two = 0
-
+			
+			--contiene coppie host,stima
 			local host_packets= {}
 
        		local hll_hosts = {}
-       		local hll_packets = {}
         	local hll_to_host = {}
+			--contiene coppie host, hll associata
+			local hll_packets = {}
         
         	local init_one = hll_init (hll_hosts , 19)
 			local init_two = hll_init (hll_to_host, 19)
-			local init_three = hll_init (hll_packets, 19)
-		     
 			
-			if (init_one and init_two and init_three) then	
+			if (init_one and init_two) then	
 
 				 -- this is our tap
 				local tap = Listener.new();
@@ -65,13 +65,16 @@ local function host_info ()
 					end
 
 					if host then
-												
-						if host_packets[host] == nil or host_packets[host] == 0 then
-							host_packets[host]=1
+			
+						if 	host_packets[host] == nil then
+							hll_packets[host]={}
+							if hll_init(hll_packets[host],19) then
+								host_packets[host]= 0
+							end
 						end	
 						
-						hll_add(hll_packets,tostring(tvb))
-						host_packets[host]=hll_count(hll_packets) 
+						hll_add(hll_packets[host],tostring(tvb))
+						host_packets[host]=hll_count(hll_packets[host]) 
 					end	
 					
 				end
@@ -87,7 +90,7 @@ local function host_info ()
 										estimate_one .."\n"  )
 					window:append("\nEstimated different hosts contacted by " .. ipv4_address .." : " .. estimate_two .."\n" )
 					
-					window:append("\nEstimated packets per hosts:\n" )
+					window:append("\nEstimated packets per host:\n" )
 					for ip,num in pairs(host_packets) do
 						window:append(ip .. ":\t" .. num .. "\n");
 					end					
@@ -98,12 +101,12 @@ local function host_info ()
 				-- e.g. when reloading the capture file
 				function tap.reset()
 					window:clear()
+					host_packets={}
+					hll_packets={}
 					init_one = hll_init (hll_hosts , 19)
-					init_two = hll_init (hll_packets , 19)
-					init_three = hll_init (hll_to_host , 19)
+					init_two = hll_init (hll_to_host , 19)
 					estimate_one=0
-					estimate_two=0
-					host_packets = {}
+					estimate_two=0	
 				end
 					
 				-- Ensure that all existing packets are processed.
