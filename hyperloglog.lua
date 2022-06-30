@@ -132,7 +132,6 @@ function hll_count (hll)
 		estimate=math.ceil(estimate)
 
     	return estimate
- 
 	else
     	return(0.)
 	end
