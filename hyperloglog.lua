@@ -13,7 +13,7 @@ local function _hll_rank (dec_hash,bits)
  	local rank=0
 	
 	for i=1,32-bits do
-   		local c = bin_hash:sub(i,i)	 		
+   	    local c = bin_hash:sub(i,i)	 		
    		local bin_hash=toBinString(dec_hash)
    		
    		if c=="1" then break end
